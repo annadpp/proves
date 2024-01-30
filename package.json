@@ -6,13 +6,17 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:ui": "rm -rf dist && cd ../PhonebookFrontend && npm run build && cp -r dist ../PhonebookBackend",
+    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push"
   },
   "author": "Anna de Pablo Puig",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
     "express": "^4.18.2",
+    "mongoose": "^8.1.1",
     "morgan": "^1.10.0"
   },
   "devDependencies": {

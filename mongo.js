@@ -48,36 +48,44 @@ app.delete("/api/persons/:id", (request, response, next) => {
     .then(() => response.status(204).end())
     .catch((error) => next(error));
 });
-
-app.post("/api/persons", (request, response, next) => {
+app.post("/api/persons", (request, response) => {
   const body = request.body;
   const name = body.name;
   const number = body.number;
+
   if (!name) return response.status(400).json({ error: "name missing" });
   if (!number) return response.status(400).json({ error: "number missing" });
+
   Person.exists({ name }).then((personExists) => {
     if (personExists) {
       return response.status(400).json({ error: "name must be unique" });
     }
+
     const newPerson = new Person({ name, number });
     newPerson
       .save()
       .then((savedPerson) => {
         response.json(savedPerson);
       })
-      .catch((error) => next(error));
+      .catch((error) => {
+        console.error("error saving person to the database:", error);
+        response.status(500).json({ error: "failed to save to the database" });
+      });
   });
 });
 
 app.put("/api/persons/:id", (request, response, next) => {
-  const { name, number } = request.body;
+  const body = request.body;
 
-  Person.findByIdAndUpdate(
-    request.params.id,
-    { name, number },
-    { new: true, runValidators: true, context: "query" }
-  )
-    .then((person) => response.json(person))
+  const updatedPerson = {
+    name: body.name,
+    number: body.number,
+  };
+
+  Person.findByIdAndUpdate(request.params.id, updatedPerson, { new: true })
+    .then((updatedPerson) => {
+      response.json(updatedPerson);
+    })
     .catch((error) => next(error));
 });
 
@@ -85,18 +93,12 @@ const errorHandler = (error, request, response, next) => {
   console.error(error.message);
 
   if (error.name === "CastError") {
-    return response.status(400).json({ error: "Malformatted id" });
+    return response.status(400).json({ error: "malformatted id" });
   }
-
-  if (error.name === "ValidationError") {
-    return response.status(400).json({ error: error.message });
-  }
-
   next(error);
 };
-
+// This has to be the last loaded middleware.
 app.use(errorHandler);
-
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
