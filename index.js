@@ -5,6 +5,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static("dist"));
 
 // Define a new token for Morgan
 morgan.token("post-body", (req) => {
